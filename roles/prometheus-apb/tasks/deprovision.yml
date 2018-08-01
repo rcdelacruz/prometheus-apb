@@ -1,0 +1,97 @@
+---
+- name: '[PROMETHEUS APB][{{ mode | upper }}] Deprovision Prometheus ServiceAccount'
+  k8s_v1_service_account:
+    state: "{{ state }}"
+    name: "{{ item }}"
+    namespace: "{{ namespace }}"
+  with_items:
+    - "{{ service_name }}"
+    - "{{ service_name_proxy }}"
+
+- name: "[PROMETHEUS APB][{{ mode | upper }}] Deprovision ImageStream for Prometheus image"
+  openshift_v1_image_stream:
+    state: "{{ state }}"
+    name: "{{ item }}"
+    namespace: "{{ namespace }}"
+  with_items:
+    - "{{ service_name }}"
+    - "{{ service_name_proxy }}"
+    - "{{ service_name_am }}"
+    - "{{ service_name_graf }}"
+    - "{{ service_name_graf_proxy }}"
+
+- name: "[PROMETHEUS APB][{{ mode | upper }}] Deprovision RoleBinding Service Account"
+  k8s_v1beta1_role_binding:
+    state: "{{ state }}"
+    name: "{{ item }}-view"
+    namespace: "{{ namespace }}"
+  with_items:
+    - "{{ service_name }}"
+    - "{{ service_name_proxy }}"
+
+- name: "[PROMETHEUS APB][{{ mode | upper }}] Deprovision Openshift ConfigMap resources"
+  k8s_v1_config_map:
+    state: "{{ state }}"
+    name: "{{ item }}"
+    namespace: "{{ namespace }}"
+  with_items:
+    - "{{ prometheus_configmap_name }}"
+    - "{{ prometheus_configmap_rules_name }}"
+    - "{{ prometheus_alertmanager_configmap_name }}" 
+    - "{{ prometheus_alertmanager_configmap_templates_name }}" 
+    - "{{ prometheus_proxy_configmap_oauth_name }}" 
+    - "{{ prometheus_grafana_configmap_name }}"
+    - "{{ prometheus_grafana_proxy_configmap_oauth_name }}"
+
+- name: "[PROMETHEUS APB][{{ mode | upper }}] Deprovision Prometheus PVC for Persistent plan"
+  k8s_v1_persistent_volume_claim:
+    state: "{{ state }}"
+    name: "{{ item }}" 
+    namespace: "{{ namespace }}"
+  with_items:
+    - "{{ prometheus_pvc_name }}"
+    - "{{ prometheus_alertmanager_pvc_name }}"
+    - "{{ prometheus_grafana_data_pvc_name }}"
+  when: _apb_plan_id == 'persistent'
+
+- name: "[PROMETHEUS APB][{{ mode | upper }}] Deprovision Prometheus Deployment Config"
+  openshift_v1_deployment_config:
+    state: "{{ state }}"
+    name: "{{ item }}"
+    namespace: "{{ namespace }}"
+  with_items:
+    - "{{ service_name }}"
+    - "{{ service_name_proxy }}"
+    - "{{ service_name_am }}"
+    - "{{ service_name_graf_proxy }}"
+
+- name: "[PROMETHEUS APB][{{ mode | upper }}] Deprovision Prometheus Service"
+  k8s_v1_service:
+    state: "{{ state }}"
+    name: "{{ item }}"
+    namespace: "{{ namespace }}"
+  with_items:
+    - "{{ service_name }}"
+    - "{{ service_name_proxy }}"
+    - "{{ service_name_am }}"
+    - "{{ service_name_graf_proxy }}"
+
+- name: "[PROMETHEUS APB][{{ mode | upper }}] Deprovision Prometheus Route"
+  openshift_v1_route:
+    state: "{{ state }}"
+    name: "{{ item }}"
+    namespace: '{{ namespace }}'
+  with_items:
+    - "{{ service_name }}"
+    - "{{ service_name_proxy }}"
+    - "{{ service_name_graf_proxy }}"
+
+- name: "[PROMETHEUS APB][{{ mode | upper }}] Deprovision Prometheus Secret"
+  k8s_v1_secret:
+    state: "{{ state }}"
+    name: "{{ item }}" 
+    namespace: "{{ namespace }}"
+  with_items:
+    - "{{ prometheus_secret_name }}"
+    - "{{ prometheus_proxy_tls_secret_name }}"
+

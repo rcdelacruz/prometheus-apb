@@ -1,0 +1,14 @@
+---
+- name: "[PROMETHEUS APB][DEPROVISION] Deprovision application Prometheus APB"
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  vars:
+    state: 'absent'
+    mode: 'deprovision'
+  roles:
+  - role: ansible.kubernetes-modules
+    install_python_requirements: no
+  - role: ansibleplaybookbundle.asb-modules
+  - role: prometheus-apb
+    playbook_debug: false
